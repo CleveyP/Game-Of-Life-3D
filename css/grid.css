@@ -1,0 +1,31 @@
+#board{
+    display: flex;
+    flex-direction: column;
+    height: 800px;
+    width: 800px;
+}
+
+.row{
+    display: flex;
+    flex-direction: row;
+}
+
+.cell{
+    width: 20px;
+    height: 20px;
+    border: 1px solid #000;
+    transition-property: background-color;
+    transition-duration: .5s;
+}
+
+.dead{
+    background-color: #000;
+}
+
+.isolated{
+    background-color: green;
+}
+
+.alive{
+    background-color: #fff;
+}
