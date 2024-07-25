@@ -1,0 +1,15 @@
+{
+  "name": "gameoflife",
+  "version": "1.0.0",
+  "description": "game of life game in 3d see readme",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "build": " tsc"
+  },
+  "author": "Cleveland Plonsey, Abbas Mahdavi",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "^5.5.4"
+  }
+}
