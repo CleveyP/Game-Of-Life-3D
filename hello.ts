@@ -165,7 +165,7 @@ for (let gridRow of grid) {
     } else {
       cellElement.classList.add("alive");
     }
-    rowElement.addEventListener("click", () => {
+    cellElement.addEventListener("click", () => {
         cell.isDead = !cell.isDead;
         if (cell.isDead) {
             cellElement.classList.add("dead");
