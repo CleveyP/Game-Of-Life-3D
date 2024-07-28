@@ -5,12 +5,14 @@ class Cell {
   col: number;
   height: number;
   isDead: boolean;
+  isHuman: boolean;
 
-  constructor(row: number, col: number, height: number | null, isDead: boolean | null) {
+  constructor(row: number, col: number, height: number | null, isDead: boolean | null, isHuman: boolean | null = false) {
     this.row = row;
     this.col = col;
     this.height = height || 0;
     this.isDead = isDead ?? true;
+    this.isHuman = isHuman ?? false;
   }
 }
 
@@ -66,8 +68,8 @@ function getNextState(board: Cell[][]): void {
         if (board[row + 1][col + 1] && !board[row + 1][col + 1].isDead) count++;
       }
       const posStr = JSON.stringify([row, col]);
-      if (!board[row][col].isDead && (count < 2 || count > 3)) cellsToChange[posStr] = true; // Cell dies
-      else if (board[row][col].isDead && count === 3) cellsToChange[posStr] = false; // Cell becomes alive
+      if ( !board[row][col].isHuman && !board[row][col].isDead && (count < 2 || count > 3)) cellsToChange[posStr] = true; // Cell dies
+      else if ( !board[row][col].isHuman && board[row][col].isDead && count === 3) cellsToChange[posStr] = false; // Cell becomes alive
     }
   }
 
@@ -86,46 +88,25 @@ simulateButton?.addEventListener("click", () => {
 
   inter = setInterval(() => {
     getNextState(grid);
-    for (let row of grid) {
-        for (let cell of row) {
-          const cellElement = document.getElementById(`cell-${cell.row}-${cell.col}`);
-          if (cell.isDead) {
-            cellElement?.classList.add("dead");
-            cellElement?.classList.remove("alive");
-            cellElement?.classList.remove("isolated");
-          } else {
-            const cellNeighbors = [];
-            for(let direction of directions){
-                const newRow = cell.row + direction[0];
-                const newCol = cell.col + direction[1];
-                if(grid[newRow] && grid[newRow][newCol] && !grid[newRow][newCol].isDead){
-                    cellNeighbors.push(grid[newRow][newCol]);
-                }
-            }
-            
-            if(cellNeighbors.length === 0){
-                cellElement?.classList.add("isolated");
-            }
-            else{
-                cellElement?.classList.add("alive");
-                cellElement?.classList.remove("isolated");
-            }
-            cellElement?.classList.remove("dead");
-          }
-        }
-      }
+    plotBoard(grid);
   }, 400);
 });
-const directions = [[0, -1], [0, 1], [1, 0], [-1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]];
-const getNextStateButton = document.getElementById("getNextState");
-getNextStateButton?.addEventListener("click", () => {
-  getNextState(grid);
+
+
+const plotBoard = (board: Cell[][]) => {
+  const directions = [[0, -1], [0, 1], [1, 0], [-1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]];
   for (let row of grid) {
     for (let cell of row) {
       const cellElement = document.getElementById(`cell-${cell.row}-${cell.col}`);
+      if(cell.isHuman){
+        cellElement?.classList.add("human");
+      }
+      else{
       if (cell.isDead) {
         cellElement?.classList.add("dead");
         cellElement?.classList.remove("alive");
+        cellElement?.classList.remove("isolated");
+        cellElement?.classList.remove("human");
       } else {
         const cellNeighbors = [];
         for(let direction of directions){
@@ -146,11 +127,53 @@ getNextStateButton?.addEventListener("click", () => {
         cellElement?.classList.remove("dead");
       }
     }
+    }
   }
+}
+
+const getNextStateButton = document.getElementById("getNextState");
+getNextStateButton?.addEventListener("click", () => {
+  getNextState(grid);
+  plotBoard(grid);
 });
 
-
-
+let humanCell: Cell = new Cell(numRows/2, numCols/2, 0, false, true);
+//place character in the middle of the board
+grid[numRows/2][numCols/2] = humanCell;
+window.addEventListener("keydown", (e) => {
+  if(e.key === "ArrowUp" && humanCell.row > 0){
+    humanCell.row--;
+    //reset the previous cell
+    grid[humanCell.row + 1][humanCell.col] = new Cell(humanCell.row + 1, humanCell.col, 0, true, false);
+    //set the new cell
+    grid[humanCell.row][humanCell.col] = humanCell;
+  }
+  else if(e.key === "ArrowDown" && humanCell.row < numRows - 1){
+    humanCell.row++;
+    //reset the previous cell
+    grid[humanCell.row - 1][humanCell.col] = new Cell(humanCell.row - 1, humanCell.col, 0, true, false);
+    //set the new cell
+    grid[humanCell.row][humanCell.col] = humanCell;
+  }
+  else if(e.key === "ArrowLeft" && humanCell.col > 0){
+    humanCell.col--;
+    //reset the previous cell
+    grid[humanCell.row][humanCell.col + 1] = new Cell(humanCell.row, humanCell.col + 1, 0, true, false);
+    //set the new cell
+    grid[humanCell.row][humanCell.col] = humanCell;
+  }
+  else if(e.key === "ArrowRight" && humanCell.col < numCols - 1){
+    humanCell.col++;
+    //reset the previous cell
+    grid[humanCell.row][humanCell.col - 1] = new Cell(humanCell.row, humanCell.col - 1, 0, true, false);
+    //set the new cell
+    grid[humanCell.row][humanCell.col] = humanCell;
+    }
+    else{
+      return;
+    }
+  plotBoard(grid);
+});
 // Map out the board
 const boardComponent = document.getElementById("board");
 for (let gridRow of grid) {
@@ -160,11 +183,17 @@ for (let gridRow of grid) {
     const cellElement = document.createElement("div");
     cellElement.className = "cell";
     cellElement.id = `cell-${cell.row}-${cell.col}`;
+    if(cell.isHuman){
+      cellElement.classList.add("human");
+    }
+    else{
     if (cell.isDead) {
       cellElement.classList.add("dead");
     } else {
       cellElement.classList.add("alive");
     }
+  }
+    
     cellElement.addEventListener("click", () => {
         cell.isDead = !cell.isDead;
         if (cell.isDead) {
@@ -179,3 +208,37 @@ for (let gridRow of grid) {
   }
   boardComponent?.appendChild(rowElement);
 }
+
+
+
+
+
+
+
+// for (let row of grid) {
+//   for (let cell of row) {
+//     const cellElement = document.getElementById(`cell-${cell.row}-${cell.col}`);
+//     if (cell.isDead) {
+//       cellElement?.classList.add("dead");
+//       cellElement?.classList.remove("alive");
+//     } else {
+//       const cellNeighbors = [];
+//       for(let direction of directions){
+//           const newRow = cell.row + direction[0];
+//           const newCol = cell.col + direction[1];
+//           if(grid[newRow] && grid[newRow][newCol] && !grid[newRow][newCol].isDead){
+//               cellNeighbors.push(grid[newRow][newCol]);
+//           }
+//       }
+      
+//       if(cellNeighbors.length === 0){
+//           cellElement?.classList.add("isolated");
+//       }
+//       else{
+//           cellElement?.classList.add("alive");
+//           cellElement?.classList.remove("isolated");
+//       }
+//       cellElement?.classList.remove("dead");
+//     }
+//   }
+// }

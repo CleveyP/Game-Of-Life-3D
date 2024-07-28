@@ -29,3 +29,7 @@
 .alive{
     background-color: #fff;
 }
+
+.human{
+    background-color: red !important;
+}
